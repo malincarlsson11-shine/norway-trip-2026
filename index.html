@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Norge 2025 – Reseplanerare</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1c1c1a;
+  --paper: #f6f4ef;
+  --cream: #ece8de;
+  --fjord: #234d5e;
+  --fjord-mid: #3a7a93;
+  --fjord-light: #e6f2f7;
+  --fjord-lighter: #f0f8fb;
+  --gold: #a8751f;
+  --gold-light: #fdf3e2;
+  --red: #b83228;
+  --red-light: #fdf0ee;
+  --green: #2a6147;
+  --green-light: #eaf4ee;
+  --amber: #c47a0a;
+  --amber-light: #fef4e2;
+  --border: rgba(28,28,26,0.1);
+  --border-mid: rgba(28,28,26,0.18);
+  --shadow: 0 2px 16px rgba(28,28,26,0.07);
+  --shadow-lg: 0 8px 40px rgba(28,28,26,0.13);
+  --radius: 12px;
+  --radius-sm: 7px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ─── HEADER ─── */
+header {
+  background: var(--fjord);
+  color: white;
+  padding: 2.5rem 1.5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 36px);
+  pointer-events: none;
+}
+header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  letter-spacing: -0.02em;
+  position: relative;
+}
+header .tagline {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-top: 0.3rem;
+  font-weight: 300;
+  position: relative;
+}
+.header-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  position: relative;
+}
+.stat { text-align: center; }
+.stat .n {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat .l {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  margin-top: 0.2rem;
+}
+.header-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+/* ─── AUTH ─── */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,28,26,0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.auth-box {
+  background: white;
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: min(360px, 92vw);
+  box-shadow: var(--shadow-lg);
+}
+.auth-box h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  margin-bottom: 1.2rem;
+  color: var(--fjord);
+}
+.auth-box p {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 1.2rem;
+}
+
+/* ─── MAIN ─── */
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem 5rem;
+}
+
+/* ─── SUMMARY BAR ─── */
+.summary-bar {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.8rem;
+}
+.sum-item { text-align: center; min-width: 70px; }
+.sum-item .n {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--fjord);
+  line-height: 1;
+}
+.sum-item .l {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #999;
+  margin-top: 0.2rem;
+}
+.sum-divider { width: 1px; background: var(--border); height: 40px; }
+.sum-cost {
+  flex: 1;
+  text-align: right;
+  font-size: 0.82rem;
+  color: #777;
+}
+.sum-cost strong {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: var(--fjord);
+}
+.rate-note {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-top: 0.2rem;
+}
+
+/* ─── SECTION TITLE ─── */
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  color: var(--fjord);
+  margin: 2rem 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 1.1em;
+  background: var(--gold);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ─── DRIVE ROW ─── */
+.drive-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  margin: 0.35rem 0;
+  background: var(--cream);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: #666;
+  border: 1px solid var(--border);
+}
+.drive-row .arrow { color: var(--gold); font-size: 0.9rem; }
+.drive-row.editable { cursor: pointer; }
+.drive-row.editable:hover { background: var(--fjord-light); border-color: var(--fjord-mid); }
+
+/* ─── STOP CARD ─── */
+.stop-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.stop-card:hover { box-shadow: var(--shadow-lg); }
+
+.card-header {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  user-select: none;
+}
+.stop-num {
+  width: 36px; height: 36px;
+  background: var(--fjord);
+  color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 600;
+  flex-shrink: 0;
+}
+.card-title h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem; font-weight: 600;
+}
+.card-title .sub {
+  font-size: 0.72rem; color: #999; margin-top: 0.1rem;
+}
+.card-badges { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+.badge {
+  font-size: 0.65rem; padding: 0.2rem 0.55rem;
+  border-radius: 20px; font-weight: 500; white-space: nowrap;
+}
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-blue { background: var(--fjord-light); color: var(--fjord); }
+.badge-acc { background: var(--gold-light); color: var(--gold); }
+
+.expand-icon {
+  color: #bbb; font-size: 0.75rem;
+  transition: transform 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+.stop-card.open .expand-icon { transform: rotate(180deg); color: var(--fjord); }
+
+/* ─── CARD BODY ─── */
+.card-body {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 1.2rem;
+}
+.stop-card.open .card-body { display: block; }
+
+/* INFO GRID */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem;
+  margin-bottom: 1.2rem;
+}
+@media (max-width: 580px) { .info-grid { grid-template-columns: 1fr; } }
+
+.info-cell {
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+}
+.info-cell .lbl {
+  font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.1em; opacity: 0.55; margin-bottom: 0.3rem;
+}
+.info-cell .val { font-size: 0.83rem; font-weight: 500; line-height: 1.3; }
+.info-cell .sub { font-size: 0.72rem; opacity: 0.65; margin-top: 0.2rem; }
+.cell-hike { background: var(--fjord-lighter); }
+.cell-food { background: var(--gold-light); }
+.cell-drive { background: var(--cream); }
+
+/* ─── SECTION BLOCKS ─── */
+.block {
+  border-top: 1px dashed var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+.block-title {
+  font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--fjord);
+  font-weight: 600; margin-bottom: 0.75rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* ─── ACCOMMODATION ─── */
+.acc-display {
+  background: var(--fjord-lighter);
+  border: 1px solid rgba(58,122,147,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  font-size: 0.83rem;
+  min-height: 44px;
+}
+.acc-display:empty::before { content: 'Inget boende angivet...'; opacity: 0.35; font-style: italic; }
+.acc-meta {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  margin-top: 0.5rem; font-size: 0.78rem; color: #888;
+}
+.acc-price {
+  background: var(--gold-light);
+  border-radius: 20px;
+  padding: 0.15rem 0.7rem;
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.acc-price-breakdown {
+  font-size: 0.72rem;
+  color: #aaa;
+  margin-top: 0.3rem;
+}
+
+/* ─── FORMS ─── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+.field label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #888; font-weight: 500; }
+.field input, .field select, .field textarea {
+  padding: 0.55rem 0.8rem;
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--fjord-mid);
+  box-shadow: 0 0 0 3px var(--fjord-light);
+}
+.field textarea { resize: vertical; min-height: 60px; }
+.field.full { grid-column: 1 / -1; }
+
+/* ─── BUTTONS ─── */
+.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem; font-weight: 500;
+  transition: all 0.15s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.btn-primary { background: var(--fjord); color: white; }
+.btn-primary:hover { background: var(--fjord-mid); }
+.btn-ghost { background: var(--cream); color: var(--ink); border: 1px solid var(--border-mid); }
+.btn-ghost:hover { background: var(--border); }
+.btn-danger { background: var(--red-light); color: var(--red); }
+.btn-danger:hover { background: #fce; }
+.btn-gold { background: var(--gold-light); color: var(--gold); border: 1px solid rgba(168,117,31,0.2); }
+.btn-gold:hover { background: #fce8c0; }
+.btn-sm { padding: 0.35rem 0.7rem; font-size: 0.75rem; }
+.btn-icon { padding: 0.4rem 0.6rem; }
+
+/* ─── IMAGES ─── */
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.img-item {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  cursor: pointer;
+}
+.img-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.img-item:hover img { transform: scale(1.06); }
+.img-delete {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(0,0,0,0.55); color: white;
+  border: none; border-radius: 50%;
+  width: 20px; height: 20px; font-size: 0.65rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+.img-item:hover .img-delete { opacity: 1; }
+.img-caption {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.65));
+  color: white; font-size: 0.6rem; padding: 0.5rem 0.4rem 0.25rem;
+  opacity: 0; transition: opacity 0.15s;
+}
+.img-item:hover .img-caption { opacity: 1; }
+.img-add {
+  aspect-ratio: 4/3;
+  border: 2px dashed var(--border-mid);
+  border-radius: var(--radius-sm);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.3rem; cursor: pointer;
+  font-size: 0.7rem; color: #bbb;
+  background: var(--cream);
+  transition: all 0.15s;
+}
+.img-add:hover { border-color: var(--fjord-mid); background: var(--fjord-light); color: var(--fjord); }
+
+/* ─── ADMIN BAR ─── */
+.admin-bar {
+  display: none;
+  background: var(--fjord);
+  color: white;
+  padding: 0.6rem 1rem;
+  font-size: 0.75rem;
+  text-align: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.admin-bar.visible { display: flex; }
+.admin-label { opacity: 0.7; }
+
+/* ─── ADD STOP MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(28,28,26,0.6);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  display: none; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white;
+  border-radius: var(--radius);
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 1.8rem;
+}
+.modal h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem; color: var(--fjord);
+  margin-bottom: 1.2rem;
+}
+.modal-footer {
+  display: flex; gap: 0.6rem; justify-content: flex-end;
+  margin-top: 1.2rem; padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── LIGHTBOX ─── */
+.lightbox {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 900;
+  display: none; align-items: center; justify-content: center;
+}
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 4px; }
+.lightbox-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: rgba(255,255,255,0.15); color: white;
+  border: none; border-radius: 50%;
+  width: 36px; height: 36px; font-size: 1rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  background: var(--fjord); color: white;
+  padding: 0.65rem 1.1rem; border-radius: var(--radius-sm);
+  font-size: 0.82rem; box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(8px);
+  transition: all 0.25s; z-index: 800; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background: var(--red); }
+
+/* ─── RATE BAR ─── */
+.rate-bar {
+  background: var(--gold-light);
+  border: 1px solid rgba(168,117,31,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1rem;
+  font-size: 0.78rem;
+  color: var(--gold);
+  display: flex; align-items: center; gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.rate-bar input {
+  width: 70px; padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(168,117,31,0.3);
+  border-radius: 4px; font-size: 0.78rem;
+  color: var(--gold); background: white;
+  text-align: center;
+}
+
+/* Loading */
+.loading { text-align: center; padding: 3rem; color: #aaa; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<!-- ADMIN BAR -->
+<div class="admin-bar" id="adminBar">
+  <span class="admin-label">✏️ Redigeringsläge aktivt</span>
+  <div style="display:flex;gap:0.5rem">
+    <button class="btn btn-gold btn-sm" onclick="openAddStop()">+ Lägg till stopp</button>
+    <button class="btn btn-ghost btn-sm" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="signOut()">Logga ut</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" id="loginBtn" onclick="showAuth()" style="color:white;border-color:rgba(255,255,255,0.3);font-size:0.75rem">🔒 Logga in</button>
+  </div>
+  <h1>Norge 2025</h1>
+  <div class="tagline">Reseplanerare · 4 vuxna · Xpeng G9</div>
+  <div class="header-stats">
+    <div class="stat"><div class="n">10</div><div class="l">Dagar</div></div>
+    <div class="stat"><div class="n">~3 010</div><div class="l">Km totalt</div></div>
+    <div class="stat"><div class="n" id="statStops">9</div><div class="l">Stopp</div></div>
+    <div class="stat"><div class="n" id="statAcc">0</div><div class="l">Boenden klara</div></div>
+    <div class="stat"><div class="n" id="statImgs">0</div><div class="l">Bilder</div></div>
+  </div>
+</header>
+
+<!-- AUTH OVERLAY -->
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <div class="auth-box">
+    <h2>Logga in för att redigera</h2>
+    <p>Läsare kan se resan utan inloggning. Logga in för att redigera stopp, boende och bilder.</p>
+    <div class="field" style="margin-bottom:0.6rem">
+      <label>E-post</label>
+      <input type="email" id="authEmail" placeholder="din@email.se">
+    </div>
+    <div class="field" style="margin-bottom:1rem">
+      <label>Lösenord</label>
+      <input type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doLogin()" style="flex:1">Logga in</button>
+      <button class="btn btn-ghost" onclick="hideAuth()">Avbryt</button>
+    </div>
+    <div id="authError" style="color:var(--red);font-size:0.78rem;margin-top:0.6rem;display:none"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT STOP MODAL -->
+<div class="modal-overlay" id="stopModal">
+  <div class="modal">
+    <h2 id="modalTitle">Lägg till stopp</h2>
+    <input type="hidden" id="editStopId">
+    <div class="form-grid">
+      <div class="field"><label>Namn</label><input id="f-name" placeholder="t.ex. Bergen"></div>
+      <div class="field"><label>Dag</label><input id="f-day" placeholder="t.ex. Dag 4"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Vandring</label><input id="f-hike" placeholder="Namn på vandring"></div>
+      <div class="field"><label>Vandringsdetaljer</label><input id="f-hike-detail" placeholder="km · tid · highlight"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Svårighetsgrad</label>
+        <select id="f-diff">
+          <option value="easy">Lätt</option>
+          <option value="medium">Medel</option>
+          <option value="hard">Krävande</option>
+        </select>
+      </div>
+      <div class="field"><label>Matbutik</label><input id="f-food" placeholder="t.ex. Rema 1000 / Kiwi"></div>
+    </div>
+    <div class="field full" style="margin-bottom:0.6rem"><label>Matnotering</label><input id="f-food-note" placeholder="t.ex. Storhandla här!"></div>
+    <div class="field full" style="margin-bottom:0.6rem"><label>Körning hit (från föregående stopp)</label><input id="f-drive" placeholder="t.ex. Oslo → Geilo · Rv7 · ~210 km · ca 2,5 h"></div>
+    <div class="field full"><label>Koordinater (valfritt)</label><input id="f-coords" placeholder="t.ex. 61.318°N 7.316°E"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeStopModal()">Avbryt</button>
+      <button class="btn btn-primary" onclick="saveStop()">Spara stopp</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOMMODATION MODAL -->
+<div class="modal-overlay" id="accModal">
+  <div class="modal">
+    <h2 id="accModalTitle">Boende</h2>
+    <input type="hidden" id="accStopId">
+    <input type="hidden" id="accId">
+    <div class="form-grid">
+      <div class="field full"><label>Namn / hotell / hytta</label><input id="acc-name" placeholder="t.ex. Fjordvik Hytte, Vestlia Resort"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field full"><label>Adress</label><input id="acc-address" placeholder="Gatuadress, ort"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Bokningsnummer</label><input id="acc-ref" placeholder="t.ex. AIRBNB-12345"></div>
+      <div class="field"><label>Länk (Airbnb, Booking etc)</label><input id="acc-url" type="url" placeholder="https://..."></div>
+    </div>
+    <div class="form-grid cols-4">
+      <div class="field">
+        <label>Pris</label>
+        <input id="acc-price" type="number" min="0" step="1" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Valuta</label>
+        <select id="acc-currency">
+          <option value="NOK">NOK</option>
+          <option value="SEK">SEK</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Pristyp</label>
+        <select id="acc-pricetype">
+          <option value="hytta">Hel hytta (÷4)</option>
+          <option value="per_room">Per rum (×2)</option>
+          <option value="per_person">Per person (×4)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nätter</label>
+        <input id="acc-nights" type="number" min="1" value="1">
+      </div>
+    </div>
+    <div class="field full" style="margin-top:0.4rem">
+      <label>Anteckningar</label>
+      <textarea id="acc-notes" placeholder="t.ex. Inkl. frukost, slutstädning tillkommer 500 NOK..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAccModal()">Avbryt</button>
+      <button class="btn btn-primary" onclick="saveAccommodation()">Spara boende</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<main>
+  <div class="rate-bar" id="rateBar">
+    <span>💱 Valutakurs:</span>
+    <label>1 NOK = <input type="number" id="nokRate" step="0.001" min="0.01" onchange="saveRateManual()"> SEK</label>
+    <label>1 EUR = <input type="number" id="eurRate" step="0.01" min="0.1" onchange="saveRateManual()"> SEK</label>
+    <span id="rateSource" style="opacity:0.6;font-size:0.7rem"></span>
+  </div>
+
+  <div class="summary-bar">
+    <div class="sum-item"><div class="n" id="sum-stops">9</div><div class="l">Stopp</div></div>
+    <div class="sum-divider"></div>
+    <div class="sum-item"><div class="n" id="sum-acc">0</div><div class="l">Boenden klara</div></div>
+    <div class="sum-item"><div class="n" id="sum-imgs">0</div><div class="l">Bilder</div></div>
+    <div class="sum-divider"></div>
+    <div class="sum-cost">
+      <strong id="sum-total-sek">– SEK</strong>
+      <div class="rate-note" id="sum-per-person"></div>
+      <div class="rate-note">Total boendekostnad (inkl. omräkning)</div>
+    </div>
+  </div>
+
+  <div class="section-title">Reseplan</div>
+  <div id="stopsContainer"><div class="loading">Laddar reseplan...</div></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────
+const SUPABASE_URL = 'https://biqtstbtmchnystomvvt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcXRzdGJ0bWNobnlzdG9tdnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1Nzc3OTksImV4cCI6MjA5MTE1Mzc5OX0.Mqf22SPfj2aio_uFwvVLA9dzB-6LEu7ekI_y-JvxukY';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── STATE ────────────────────────────────────────────
+let stops = [], accommodations = {}, images = {};
+let isAdmin = false;
+let rates = { nok: 0.96, eur: 11.20 };
+
+// ─── INIT ─────────────────────────────────────────────
+async function init() {
+  await fetchRates();
+  await loadAll();
+  checkAuth();
+}
+
+async function loadAll() {
+  const [stopsRes, accRes, imgRes] = await Promise.all([
+    sb.from('stops').select('*').order('order_index'),
+    sb.from('accommodations').select('*'),
+    sb.from('images').select('*').order('order_index')
+  ]);
+  stops = stopsRes.data || [];
+  accommodations = {};
+  (accRes.data || []).forEach(a => { accommodations[a.stop_id] = a; });
+  images = {};
+  (imgRes.data || []).forEach(img => {
+    if (!images[img.stop_id]) images[img.stop_id] = [];
+    images[img.stop_id].push(img);
+  });
+  renderAll();
+  updateSummary();
+}
+
+// ─── AUTH ─────────────────────────────────────────────
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  setAdmin(!!session);
+  sb.auth.onAuthStateChange((_e, s) => setAdmin(!!s));
+}
+function setAdmin(val) {
+  isAdmin = val;
+  document.getElementById('adminBar').classList.toggle('visible', val);
+  document.getElementById('loginBtn').style.display = val ? 'none' : '';
+  renderAll();
+}
+function showAuth() { document.getElementById('authOverlay').style.display = 'flex'; }
+function hideAuth() { document.getElementById('authOverlay').style.display = 'none'; }
+async function doLogin() {
+  const email = document.getElementById('authEmail').value;
+  const pw = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { errEl.textContent = 'Fel e-post eller lösenord.'; errEl.style.display = 'block'; return; }
+  hideAuth();
+  toast('Inloggad! ✓');
+}
+async function signOut() {
+  await sb.auth.signOut();
+  toast('Utloggad');
+}
+
+// ─── RATES ────────────────────────────────────────────
+async function fetchRates() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=NOK,EUR&to=SEK');
+    const data = await res.json();
+    rates.nok = data.rates?.SEK || 0.96;
+    const eurRes = await fetch('https://api.frankfurter.app/latest?from=EUR&to=SEK');
+    const eurData = await eurRes.json();
+    rates.eur = eurData.rates?.SEK || 11.20;
+    document.getElementById('rateSource').textContent = 'Automatisk · uppdaterad idag';
+    if (isAdmin) { await sb.from('settings').upsert([{key:'nok_sek_rate',value:String(rates.nok),updated_at:new Date().toISOString()},{key:'eur_sek_rate',value:String(rates.eur),updated_at:new Date().toISOString()},{key:'last_rate_fetch',value:new Date().toISOString()}]); }
+  } catch {
+    const { data } = await sb.from('settings').select('*');
+    if (data) { data.forEach(r => { if(r.key==='nok_sek_rate') rates.nok=parseFloat(r.value)||0.96; if(r.key==='eur_sek_rate') rates.eur=parseFloat(r.value)||11.20; }); }
+    document.getElementById('rateSource').textContent = 'Manuell kurs';
+  }
+  document.getElementById('nokRate').value = rates.nok.toFixed(4);
+  document.getElementById('eurRate').value = rates.eur.toFixed(2);
+}
+async function saveRateManual() {
+  rates.nok = parseFloat(document.getElementById('nokRate').value) || 0.96;
+  rates.eur = parseFloat(document.getElementById('eurRate').value) || 11.20;
+  document.getElementById('rateSource').textContent = 'Manuell kurs';
+  updateSummary();
+  if (isAdmin) await sb.from('settings').upsert([{key:'nok_sek_rate',value:String(rates.nok)},{key:'eur_sek_rate',value:String(rates.eur)}]);
+}
+function toSEK(amount, currency) {
+  if (!amount) return 0;
+  if (currency === 'SEK') return amount;
+  if (currency === 'NOK') return amount * rates.nok;
+  if (currency === 'EUR') return amount * rates.eur;
+  return amount;
+}
+function totalForStop(acc) {
+  if (!acc || !acc.price_amount) return 0;
+  const base = acc.price_amount * (acc.num_nights || 1);
+  if (acc.price_type === 'per_room') return base * 2;
+  if (acc.price_type === 'per_person') return base * 4;
+  return base;
+}
+function formatSEK(n) { return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(n); }
+
+// ─── SUMMARY ──────────────────────────────────────────
+function updateSummary() {
+  const n = stops.length;
+  const accDone = Object.values(accommodations).filter(a=>a&&a.name).length;
+  const imgCount = Object.values(images).reduce((s,arr)=>s+(arr||[]).length, 0);
+  let totalSEK = 0;
+  Object.values(accommodations).forEach(acc => { if(acc) totalSEK += toSEK(totalForStop(acc), acc.price_currency); });
+  ['statStops','sum-stops'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=n; });
+  ['statAcc','sum-acc'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=accDone; });
+  ['statImgs','sum-imgs'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=imgCount; });
+  const totalEl = document.getElementById('sum-total-sek');
+  const ppEl = document.getElementById('sum-per-person');
+  if (totalEl) totalEl.textContent = totalSEK > 0 ? formatSEK(totalSEK) : '– SEK';
+  if (ppEl) ppEl.textContent = totalSEK > 0 ? `${formatSEK(totalSEK/2)} per par · ${formatSEK(totalSEK/4)} per person` : '';
+}
+
+// ─── RENDER ───────────────────────────────────────────
+const diffLabel = { easy:'Lätt', medium:'Medel', hard:'Krävande' };
+const diffBadge = { easy:'badge-green', medium:'badge-amber', hard:'badge-red' };
+
+function renderAll() {
+  const container = document.getElementById('stopsContainer');
+  container.innerHTML = '';
+  stops.forEach((stop, i) => {
+    if (stop.drive_from_prev) {
+      const dr = document.createElement('div');
+      dr.className = 'drive-row' + (isAdmin ? ' editable' : '');
+      dr.innerHTML = `<span class="arrow">→</span><span>${stop.drive_from_prev}</span>`;
+      if (isAdmin) dr.onclick = () => openEditStop(stop);
+      container.appendChild(dr);
+    }
+    container.appendChild(renderStopCard(stop, i));
+  });
+  if (isAdmin) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn btn-ghost';
+    addBtn.style.cssText = 'width:100%;margin-top:0.5rem;border:2px dashed var(--border-mid)';
+    addBtn.textContent = '+ Lägg till stopp';
+    addBtn.onclick = openAddStop;
+    container.appendChild(addBtn);
+  }
+}
+
+function renderStopCard(stop, idx) {
+  const acc = accommodations[stop.id];
+  const imgs = images[stop.id] || [];
+  const isOpen = stop._open;
+
+  const card = document.createElement('div');
+  card.className = 'stop-card' + (isOpen ? ' open' : '');
+  card.id = 'card-' + stop.id;
+
+  const accBadge = acc?.name ? `<span class="badge badge-acc">🏠 ${acc.name}</span>` : '';
+  const imgBadge = imgs.length ? `<span class="badge badge-blue">📷 ${imgs.length}</span>` : '';
+  const diffB = stop.hiking_difficulty ? `<span class="badge ${diffBadge[stop.hiking_difficulty]}">${diffLabel[stop.hiking_difficulty]}</span>` : '';
+
+  const accPriceDisplay = acc?.price_amount ? (() => {
+    const total = totalForStop(acc);
+    const totalSEK = toSEK(total, acc.price_currency);
+    const nights = acc.num_nights || 1;
+    const typeLabel = acc.price_type==='hytta' ? 'hel hytta' : acc.price_type==='per_room' ? 'per rum × 2' : 'per person × 4';
+    return `
+      <div class="acc-price">${total.toLocaleString('sv-SE')} ${acc.price_currency} totalt · ${nights} natt${nights>1?'er':''}</div>
+      <div class="acc-price-breakdown">
+        ${formatSEK(totalSEK)} totalt · ${formatSEK(totalSEK/2)} per par · ${formatSEK(totalSEK/4)} per person
+        <span style="opacity:0.6"> (${typeLabel})</span>
+      </div>`;
+  })() : '';
+
+  const adminBtns = isAdmin ? `
+    <div class="btn-row" style="margin-top:0.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="openEditStop(stops.find(s=>s.id==='${stop.id}'))">✏️ Redigera stopp</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteStop('${stop.id}')">🗑 Ta bort</button>
+      ${idx > 0 ? `<button class="btn btn-ghost btn-sm" onclick="moveStop('${stop.id}',-1)">↑</button>` : ''}
+      ${idx < stops.length-1 ? `<button class="btn btn-ghost btn-sm" onclick="moveStop('${stop.id}',1)">↓</button>` : ''}
+    </div>` : '';
+
+  card.innerHTML = `
+    <div class="card-header" onclick="toggleCard('${stop.id}')">
+      <div class="stop-num">${stop.order_index}</div>
+      <div class="card-title">
+        <h3>${stop.name}</h3>
+        <div class="sub">${stop.day_label || ''} ${stop.hiking_name ? '· ' + stop.hiking_name : ''}</div>
+      </div>
+      <div class="card-badges">${diffB}${accBadge}${imgBadge}</div>
+      <div class="expand-icon">▼</div>
+    </div>
+    <div class="card-body">
+      <div class="info-grid">
+        <div class="info-cell cell-hike">
+          <div class="lbl">Vandring</div>
+          <div class="val">${stop.hiking_name || '—'}</div>
+          <div class="sub">${stop.hiking_detail || ''}</div>
+          ${stop.hiking_difficulty ? `<span class="badge ${diffBadge[stop.hiking_difficulty]}" style="margin-top:0.4rem">${diffLabel[stop.hiking_difficulty]}</span>` : ''}
+        </div>
+        <div class="info-cell cell-food" style="${stop.food_store?.includes('NOLLINKÖP') ? 'background:var(--red-light)' : ''}">
+          <div class="lbl">Matbutik</div>
+          <div class="val">${stop.food_store || '—'}</div>
+          <div class="sub">${stop.food_note || ''}</div>
+        </div>
+        <div class="info-cell cell-drive">
+          <div class="lbl">Körning vidare</div>
+          <div class="val" style="font-size:0.78rem">${stops[idx+1]?.drive_from_prev || '—'}</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">
+          <span>🏠 Boende</span>
+          ${isAdmin ? `<button class="btn btn-gold btn-sm" onclick="openAccModal('${stop.id}')">✏️ Redigera</button>` : ''}
+        </div>
+        <div class="acc-display">
+          ${acc?.name ? `<strong>${acc.name}</strong>` : ''}
+          ${acc?.address ? `<div style="font-size:0.78rem;color:#888;margin-top:0.15rem">${acc.address}</div>` : ''}
+          ${acc?.booking_ref ? `<div style="font-size:0.75rem;color:#aaa;margin-top:0.1rem">Ref: ${acc.booking_ref}</div>` : ''}
+          ${acc?.url ? `<div style="margin-top:0.3rem"><a href="${acc.url}" target="_blank" style="font-size:0.75rem;color:var(--fjord-mid)">🔗 Öppna bokning</a></div>` : ''}
+          ${acc?.notes ? `<div style="font-size:0.75rem;color:#999;margin-top:0.3rem;font-style:italic">${acc.notes}</div>` : ''}
+          ${accPriceDisplay}
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">
+          <span>📷 Bilder</span>
+          ${isAdmin ? `<label class="btn btn-gold btn-sm" style="cursor:pointer">+ Ladda upp<input type="file" accept="image/*" multiple style="display:none" onchange="handleUpload(event,'${stop.id}')"></label>` : ''}
+        </div>
+        <div class="img-grid" id="imgs-${stop.id}"></div>
+        ${isAdmin ? `<div style="margin-top:0.5rem;display:flex;gap:0.4rem">
+          <input class="field input" id="url-${stop.id}" type="url" placeholder="Eller klistra in bild-URL..." style="flex:1;padding:0.45rem 0.7rem;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);font-size:0.8rem;font-family:inherit">
+          <button class="btn btn-ghost btn-sm" onclick="addImageUrl('${stop.id}')">Lägg till</button>
+        </div>` : ''}
+      </div>
+
+      ${adminBtns}
+    </div>`;
+
+  // Render images
+  setTimeout(() => renderImages(stop.id), 0);
+  return card;
+}
+
+function renderImages(stopId) {
+  const grid = document.getElementById('imgs-' + stopId);
+  if (!grid) return;
+  const imgs = images[stopId] || [];
+  grid.innerHTML = '';
+  imgs.forEach((img, i) => {
+    const item = document.createElement('div');
+    item.className = 'img-item';
+    item.innerHTML = `
+      <img src="${img.url}" alt="${img.caption||''}" onclick="openLightbox('${img.url}')" onerror="this.parentElement.style.opacity='0.3'">
+      <div class="img-caption">${img.caption||''}</div>
+      ${isAdmin ? `<button class="img-delete" onclick="deleteImage('${stopId}','${img.id}',${!!(img.storage_path)})">✕</button>` : ''}`;
+    grid.appendChild(item);
+  });
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  const stop = stops.find(s => s.id === id);
+  if (stop) stop._open = !stop._open;
+  card?.classList.toggle('open');
+}
+
+// ─── STOP CRUD ────────────────────────────────────────
+function openAddStop() {
+  document.getElementById('modalTitle').textContent = 'Lägg till stopp';
+  document.getElementById('editStopId').value = '';
+  ['f-name','f-day','f-hike','f-hike-detail','f-food','f-food-note','f-drive','f-coords'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-diff').value = 'easy';
+  document.getElementById('stopModal').classList.add('open');
+}
+function openEditStop(stop) {
+  document.getElementById('modalTitle').textContent = 'Redigera stopp';
+  document.getElementById('editStopId').value = stop.id;
+  document.getElementById('f-name').value = stop.name || '';
+  document.getElementById('f-day').value = stop.day_label || '';
+  document.getElementById('f-hike').value = stop.hiking_name || '';
+  document.getElementById('f-hike-detail').value = stop.hiking_detail || '';
+  document.getElementById('f-diff').value = stop.hiking_difficulty || 'easy';
+  document.getElementById('f-food').value = stop.food_store || '';
+  document.getElementById('f-food-note').value = stop.food_note || '';
+  document.getElementById('f-drive').value = stop.drive_from_prev || '';
+  document.getElementById('f-coords').value = stop.coordinates || '';
+  document.getElementById('stopModal').classList.add('open');
+}
+function closeStopModal() { document.getElementById('stopModal').classList.remove('open'); }
+
+async function saveStop() {
+  const id = document.getElementById('editStopId').value;
+  const data = {
+    name: document.getElementById('f-name').value,
+    day_label: document.getElementById('f-day').value,
+    hiking_name: document.getElementById('f-hike').value,
+    hiking_detail: document.getElementById('f-hike-detail').value,
+    hiking_difficulty: document.getElementById('f-diff').value,
+    food_store: document.getElementById('f-food').value,
+    food_note: document.getElementById('f-food-note').value,
+    drive_from_prev: document.getElementById('f-drive').value,
+    coordinates: document.getElementById('f-coords').value,
+    updated_at: new Date().toISOString()
+  };
+  if (id) {
+    await sb.from('stops').update(data).eq('id', id);
+    toast('Stopp uppdaterat ✓');
+  } else {
+    data.order_index = (stops.length > 0 ? Math.max(...stops.map(s=>s.order_index)) + 1 : 1);
+    await sb.from('stops').insert(data);
+    toast('Stopp tillagt ✓');
+  }
+  closeStopModal();
+  await loadAll();
+}
+
+async function deleteStop(id) {
+  if (!confirm('Ta bort detta stopp? Boende och bilder tas också bort.')) return;
+  await sb.from('stops').delete().eq('id', id);
+  toast('Stopp borttaget');
+  await loadAll();
+}
+
+async function moveStop(id, dir) {
+  const idx = stops.findIndex(s => s.id === id);
+  const other = stops[idx + dir];
+  if (!other) return;
+  const [a, b] = [stops[idx].order_index, other.order_index];
+  await Promise.all([
+    sb.from('stops').update({order_index: b}).eq('id', id),
+    sb.from('stops').update({order_index: a}).eq('id', other.id)
+  ]);
+  await loadAll();
+}
+
+// ─── ACCOMMODATION CRUD ───────────────────────────────
+function openAccModal(stopId) {
+  const acc = accommodations[stopId];
+  document.getElementById('accStopId').value = stopId;
+  document.getElementById('accId').value = acc?.id || '';
+  document.getElementById('accModalTitle').textContent = acc?.name ? 'Redigera boende' : 'Lägg till boende';
+  document.getElementById('acc-name').value = acc?.name || '';
+  document.getElementById('acc-address').value = acc?.address || '';
+  document.getElementById('acc-ref').value = acc?.booking_ref || '';
+  document.getElementById('acc-url').value = acc?.url || '';
+  document.getElementById('acc-price').value = acc?.price_amount || '';
+  document.getElementById('acc-currency').value = acc?.price_currency || 'NOK';
+  document.getElementById('acc-pricetype').value = acc?.price_type || 'hytta';
+  document.getElementById('acc-nights').value = acc?.num_nights || 1;
+  document.getElementById('acc-notes').value = acc?.notes || '';
+  document.getElementById('accModal').classList.add('open');
+}
+function closeAccModal() { document.getElementById('accModal').classList.remove('open'); }
+
+async function saveAccommodation() {
+  const stopId = document.getElementById('accStopId').value;
+  const accId = document.getElementById('accId').value;
+  const data = {
+    stop_id: stopId,
+    name: document.getElementById('acc-name').value,
+    address: document.getElementById('acc-address').value,
+    booking_ref: document.getElementById('acc-ref').value,
+    url: document.getElementById('acc-url').value,
+    price_amount: parseFloat(document.getElementById('acc-price').value) || null,
+    price_currency: document.getElementById('acc-currency').value,
+    price_type: document.getElementById('acc-pricetype').value,
+    num_nights: parseInt(document.getElementById('acc-nights').value) || 1,
+    notes: document.getElementById('acc-notes').value,
+    updated_at: new Date().toISOString()
+  };
+  if (accId) {
+    await sb.from('accommodations').update(data).eq('id', accId);
+  } else {
+    await sb.from('accommodations').insert(data);
+  }
+  closeAccModal();
+  toast('Boende sparat ✓');
+  await loadAll();
+}
+
+// ─── IMAGE CRUD ───────────────────────────────────────
+async function handleUpload(event, stopId) {
+  const files = Array.from(event.target.files);
+  for (const file of files) {
+    const ext = file.name.split('.').pop();
+    const path = `${stopId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await sb.storage.from('trip-images').upload(path, file);
+    if (error) { toast('Uppladdning misslyckades: ' + error.message, true); continue; }
+    const { data: { publicUrl } } = sb.storage.from('trip-images').getPublicUrl(path);
+    await sb.from('images').insert({ stop_id: stopId, url: publicUrl, storage_path: path, caption: file.name, order_index: (images[stopId]||[]).length });
+  }
+  toast(`${files.length} bild(er) uppladdade ✓`);
+  await loadAll();
+  event.target.value = '';
+}
+
+async function addImageUrl(stopId) {
+  const input = document.getElementById('url-' + stopId);
+  const url = input.value.trim();
+  if (!url) return;
+  await sb.from('images').insert({ stop_id: stopId, url, caption: '', order_index: (images[stopId]||[]).length });
+  input.value = '';
+  toast('Bild tillagd ✓');
+  await loadAll();
+}
+
+async function deleteImage(stopId, imgId, hasStorage) {
+  const img = (images[stopId]||[]).find(i=>i.id===imgId);
+  if (img?.storage_path) await sb.storage.from('trip-images').remove([img.storage_path]);
+  await sb.from('images').delete().eq('id', imgId);
+  toast('Bild borttagen');
+  await loadAll();
+}
+
+// ─── LIGHTBOX ─────────────────────────────────────────
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+// ─── TOAST ────────────────────────────────────────────
+function toast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+init();
+</script>
+</body>
+</html>
