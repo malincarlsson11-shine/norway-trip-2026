@@ -389,37 +389,21 @@ header .tagline {
 .content-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;
-  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  background: white;
 }
 .content-column {
   display: flex;
   flex-direction: column;
+  gap: 0;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
 .content-column:first-child {
-  border-right: 1px solid var(--border);
-}
-
-.food-section {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--border);
-}
-
-.food-content {
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-}
-.food-item {
-  display: flex;
-  flex-direction: column;
-  padding: 0.75rem 1rem;
-  border-right: 1px solid var(--border);
-}
-.food-item:last-child {
   border-right: none;
 }
 
@@ -428,27 +412,21 @@ header .tagline {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #999;
-  font-weight: 600;
+  font-weight: 700;
   padding: 0.6rem 1rem;
-  background: rgba(0,78,137,0.02);
+  background: rgba(0,78,137,0.04);
   border-bottom: 1px solid var(--border);
 }
 
 .info-cell {
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   border-bottom: 1px solid var(--border);
 }
 .info-cell:last-child {
   border-bottom: none;
 }
 .info-cell .label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #999;
-  display: block;
-  margin-bottom: 0.3rem;
-  font-weight: 600;
+  display: none;
 }
 .info-cell .value {
   font-size: 0.9rem;
@@ -924,6 +902,10 @@ header .tagline {
       <textarea id="f-drive" placeholder="Väg, distans, tid..."></textarea>
     </div>
     <div class="form-group">
+      <label>Vandring länk</label>
+      <input id="f-hiking-url" type="url" placeholder="https://...">
+    </div>
+    <div class="form-group">
       <label>Latitud</label>
       <input id="f-lat" type="number" step="0.000001" placeholder="59.9139">
     </div>
@@ -997,6 +979,28 @@ header .tagline {
   </div>
 </div>
 
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Logga in</h3>
+      <button class="modal-close" onclick="closeLoginModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>E-postadress</label>
+      <input id="loginEmail" type="email" placeholder="din@epost.se">
+    </div>
+    <div class="form-group">
+      <label>Lösenord</label>
+      <input id="loginPassword" type="password" placeholder="••••••••">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeLoginModal()">Avbryt</button>
+      <button class="btn btn-gold" onclick="handleLogin()">Logga in</button>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <div class="lightbox-content">
     <button class="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -1041,12 +1045,33 @@ async function toggleAuth() {
   if (isAdmin) {
     logout();
   } else {
-    const email = prompt('E-post:');
-    if (!email) return;
-    const { error } = await sb.auth.signInWithOtp({ email });
-    if (error) toast(error.message, true);
-    else toast('Länk skickad till ' + email);
+    document.getElementById('loginModal').classList.add('open');
   }
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  
+  if (!email || !password) {
+    toast('E-post och lösenord krävs', true);
+    return;
+  }
+  
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  
+  if (error) {
+    toast(error.message, true);
+  } else {
+    toast('Inloggad! ✓');
+    closeLoginModal();
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+  }
+}
+
+function closeLoginModal() {
+  document.getElementById('loginModal').classList.remove('open');
 }
 
 async function logout() {
@@ -1209,6 +1234,13 @@ function createStopCard(stop, idx) {
       </div>
     `;
   }
+  if (stop.hiking_url) {
+    headerContent += `
+      <div class="info-cell">
+        <div class="value"><a href="${stop.hiking_url}" target="_blank" rel="noopener">Läs mer om vandringsleden${getExternalLinkSvg()}</a></div>
+      </div>
+    `;
+  }
 
   headerContent += `
     </div>
@@ -1233,7 +1265,7 @@ function createStopCard(stop, idx) {
         <div class="acc-price">${priceDisplay}</div>
         <div class="acc-footer">
           ${acc.booking_ref ? `<span>Ref: ${acc.booking_ref}</span>` : ''}
-          ${acc.url ? `<a href="${acc.url}" target="_blank" rel="noopener">Länk${getExternalLinkSvg()}</a>` : ''}
+          ${acc.url ? `<a href="${acc.url}" target="_blank" rel="noopener">Läs mer om boendet${getExternalLinkSvg()}</a>` : ''}
         </div>
       </div>
     `;
@@ -1367,6 +1399,7 @@ function openEditStop(stop) {
   document.getElementById('f-food').value = stop.food_store||'';
   document.getElementById('f-food-note').value = stop.food_note||'';
   document.getElementById('f-drive').value = stop.drive_from_prev||'';
+  document.getElementById('f-hiking-url').value = stop.hiking_url||'';
   document.getElementById('f-lat').value = stop.lat||'';
   document.getElementById('f-lng').value = stop.lng||'';
   document.getElementById('stopModal').classList.add('open');
@@ -1384,6 +1417,7 @@ async function saveStop() {
     hiking_name: document.getElementById('f-hike').value,
     hiking_detail: document.getElementById('f-hike-detail').value,
     hiking_difficulty: document.getElementById('f-diff').value,
+    hiking_url: document.getElementById('f-hiking-url').value,
     food_store: document.getElementById('f-food').value,
     food_note: document.getElementById('f-food-note').value,
     drive_from_prev: document.getElementById('f-drive').value,
