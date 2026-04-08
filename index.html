@@ -290,39 +290,86 @@ header .tagline {
 }
 
 .stop-header {
-  padding: 0.9rem 1rem;
+  padding: 1rem 1.2rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.9rem;
   cursor: pointer;
   transition: background 0.2s;
   background: linear-gradient(135deg, rgba(255,107,53,0.03) 0%, rgba(0,78,137,0.02) 100%);
+  flex-wrap: wrap;
 }
 .stop-card:hover .stop-header {
   background: linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(0,78,137,0.05) 100%);
 }
-.stop-header h2 {
+.stop-header-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Playfair Display', serif;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.stop-header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 0;
+  min-width: 100px;
+}
+.stop-header-title h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
   color: var(--secondary);
   margin: 0;
-  flex: 1;
+  line-height: 1;
 }
-.stop-header .day-label {
-  font-size: 0.65rem;
+.stop-header-title .day-label {
+  font-size: 0.6rem;
   color: #999;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  display: block;
-  font-weight: 500;
-  margin-bottom: 0.1rem;
+  font-weight: 600;
+}
+.stop-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 200px;
+}
+.stop-header-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #666;
+  padding: 0.35rem 0.55rem;
+  background: rgba(0,0,0,0.03);
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.stop-header-meta-item strong {
+  color: var(--secondary);
+  font-weight: 600;
+}
+.stop-header-meta-icon {
+  font-size: 0.9rem;
 }
 .stop-header .expand-icon {
   color: #bbb;
   font-size: 1.2rem;
   transition: transform 0.2s;
-  margin-left: 0.5rem;
   flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.2rem;
 }
 .stop-card.open .stop-header .expand-icon {
   transform: rotate(180deg);
@@ -343,6 +390,7 @@ header .tagline {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
+  border-bottom: 1px solid var(--border);
 }
 .content-column {
   display: flex;
@@ -350,6 +398,29 @@ header .tagline {
 }
 .content-column:first-child {
   border-right: 1px solid var(--border);
+}
+
+.food-section {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.food-content {
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.food-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  border-right: 1px solid var(--border);
+}
+.food-item:last-child {
+  border-right: none;
 }
 
 .section-label {
@@ -468,46 +539,53 @@ header .tagline {
 }
 
 .img-section {
-  padding: 0.75rem 1rem;
+  padding: 0;
   border-top: 1px solid var(--border);
 }
 .img-section .label {
   font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: #999;
   display: block;
-  margin-bottom: 0.6rem;
+  padding: 0.75rem 1rem 0.5rem;
   font-weight: 600;
-}
-.img-upload-bar {
-  display: flex;
-  gap: 0.4rem;
-  margin-bottom: 0.6rem;
+  background: rgba(0,78,137,0.02);
+  border-bottom: 1px solid var(--border);
 }
 
 .img-gallery {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
 }
 .img-gallery-item {
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  border-radius: 0;
+  box-shadow: none;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  aspect-ratio: 1;
+}
+.img-gallery-item:nth-child(even) {
+  border-right: none;
+}
+.img-gallery-item:nth-last-child(-n+2) {
+  border-bottom: none;
 }
 .img-gallery-item:hover {
-  transform: scale(1.02);
-  box-shadow: var(--shadow-lg);
+  transform: scale(1.01);
+  box-shadow: inset 0 0 0 2px var(--secondary);
+  z-index: 5;
 }
 .img-gallery-item img {
   display: block;
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   background: #f5f5f5;
 }
 .img-caption {
@@ -1060,32 +1138,63 @@ function createStopCard(stop, idx) {
     'hard': '🧗'
   }[stop.hiking_difficulty] || '🥾';
 
-  let content = `
+  // Header med alla detaljer
+  let headerContent = `
     <div class="stop-header" onclick="handleCardClick('${stop.id}')">
-      <div>
-        <span class="day-label">${dayLabel}</span>
+      <div class="stop-header-number">${idx + 1}</div>
+      
+      <div class="stop-header-title">
         <h2>${stop.name}</h2>
+        <span class="day-label">${dayLabel}</span>
       </div>
+      
+      <div class="stop-header-meta">
+        ${stop.hiking_name ? `
+          <div class="stop-header-meta-item">
+            <span class="stop-header-meta-icon">${hikeEmoji}</span>
+            <strong>${stop.hiking_name}</strong>
+          </div>
+        ` : ''}
+        
+        ${stop.hiking_difficulty ? `
+          <div class="stop-header-meta-item">
+            <strong>
+              ${stop.hiking_difficulty === 'easy' ? 'Lätt' : 
+                stop.hiking_difficulty === 'moderate' ? 'Medel' : 'Svår'}
+            </strong>
+          </div>
+        ` : ''}
+        
+        ${accommodations[stop.id] ? `
+          <div class="stop-header-meta-item">
+            <span class="stop-header-meta-icon">${getAccIcon(accommodations[stop.id].name)}</span>
+            <strong>${accommodations[stop.id].name}</strong>
+          </div>
+        ` : ''}
+      </div>
+      
       <div class="expand-icon">▼</div>
     </div>
 
     <div class="stop-content">
   `;
 
+  // Drive info
   if (stop.drive_from_prev) {
-    content += `<div class="drive-row ${isAdmin ? 'editable' : ''}" ${isAdmin ? `onclick="openEditStop(stops.find(s => s.id === '${stop.id}'))"` : ''}>
+    headerContent += `<div class="drive-row ${isAdmin ? 'editable' : ''}" ${isAdmin ? `onclick="openEditStop(stops.find(s => s.id === '${stop.id}'))"` : ''}>
       <span class="arrow">→</span>
       <span>${makeLinksClickable(stop.drive_from_prev)}</span>
     </div>`;
   }
 
-  content += `<div class="content-columns">
+  // Två-kolumns: Vandring & Boende
+  headerContent += `<div class="content-columns">
     <div class="content-column">
       <div class="section-label">🥾 Vandring</div>
   `;
 
   if (stop.hiking_name) {
-    content += `
+    headerContent += `
       <div class="info-cell">
         <span class="label">Namn</span>
         <div class="value">${stop.hiking_name}</div>
@@ -1093,7 +1202,7 @@ function createStopCard(stop, idx) {
     `;
   }
   if (stop.hiking_detail) {
-    content += `
+    headerContent += `
       <div class="info-cell">
         <span class="label">Detaljer</span>
         <div class="value">${makeLinksClickable(stop.hiking_detail)}</div>
@@ -1101,27 +1210,7 @@ function createStopCard(stop, idx) {
     `;
   }
 
-  if (stop.food_store || stop.food_note || isAdmin) {
-    content += `<div class="section-label">🛒 Mat & dryck</div>`;
-    if (stop.food_store) {
-      content += `
-        <div class="info-cell">
-          <span class="label">Butik</span>
-          <div class="value">${stop.food_store}</div>
-        </div>
-      `;
-    }
-    if (stop.food_note) {
-      content += `
-        <div class="info-cell">
-          <span class="label">Info</span>
-          <div class="value">${makeLinksClickable(stop.food_note)}</div>
-        </div>
-      `;
-    }
-  }
-
-  content += `
+  headerContent += `
     </div>
     <div class="content-column">
       <div class="section-label">🏠 Boende</div>
@@ -1131,7 +1220,7 @@ function createStopCard(stop, idx) {
   if (acc) {
     const icon = getAccIcon(acc.name);
     const priceDisplay = formatAccPrice(acc);
-    content += `
+    headerContent += `
       <div class="acc-box">
         <div class="acc-header">
           <span class="acc-icon">${icon}</span>
@@ -1149,60 +1238,85 @@ function createStopCard(stop, idx) {
       </div>
     `;
     if (isAdmin) {
-      content += `<div style="padding: 0.75rem 1rem;"><button class="btn btn-gold btn-sm" onclick="openAccModal('${stop.id}')">✎ Redigera</button></div>`;
+      headerContent += `<div style="padding: 0.75rem 1rem;"><button class="btn btn-gold btn-sm" onclick="openAccModal('${stop.id}')">✎ Redigera</button></div>`;
     }
   } else if (isAdmin) {
-    content += `
+    headerContent += `
       <div style="padding: 0.75rem 1rem;">
         <button class="btn btn-gold btn-sm" onclick="openAccModal('${stop.id}')">+ Lägg till boende</button>
       </div>
     `;
   } else {
-    content += `<div class="info-cell" style="text-align: center; color: #ccc; font-size: 0.8rem;">Ej tillagt</div>`;
+    headerContent += `<div class="info-cell" style="text-align: center; color: #ccc; font-size: 0.8rem;">Ej tillagt</div>`;
   }
 
-  content += `
+  headerContent += `
     </div>
   </div>
   `;
 
+  // Matinköp sektion (full-width under vandring/boende)
+  if (stop.food_store || stop.food_note || isAdmin) {
+    headerContent += `
+      <div class="food-section">
+        <div class="section-label">🛒 Mat & dryck</div>
+        <div class="food-content">
+          ${stop.food_store ? `
+            <div class="food-item">
+              <span class="label">Butik</span>
+              <div class="value">${stop.food_store}</div>
+            </div>
+          ` : '<div class="food-item"></div>'}
+          
+          ${stop.food_note ? `
+            <div class="food-item">
+              <span class="label">Info</span>
+              <div class="value">${makeLinksClickable(stop.food_note)}</div>
+            </div>
+          ` : '<div class="food-item"></div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  // Bilder sektion (två-kolumns)
   const stopImages = images[stop.id] || [];
   if (stopImages.length > 0 || isAdmin) {
-    content += `
+    headerContent += `
       <div class="img-section">
-        <span class="label">📷 Bilder</span>
+        <span class="label">📷 Bilder – Vandring (vänster) & Boende (höger)</span>
     `;
     if (isAdmin) {
-      content += `
-        <div class="img-upload-bar">
-          <label class="btn btn-gold btn-sm" style="cursor:pointer">+ Ladda upp<input type="file" accept="image/*" multiple style="display:none" onchange="handleUpload(event,'${stop.id}')"></label>
-          <input id="url-${stop.id}" type="url" placeholder="Eller klistra in bild-URL..." style="flex:1;padding:0.35rem 0.65rem;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);font-size:0.75rem;font-family:inherit;color:var(--ink)">
-          <button class="btn btn-ghost btn-sm" onclick="addImageUrl('${stop.id}')">Lägg till</button>
+      headerContent += `
+        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); background: var(--paper);">
+          <div class="img-upload-bar">
+            <label class="btn btn-gold btn-sm" style="cursor:pointer">+ Ladda upp<input type="file" accept="image/*" multiple style="display:none" onchange="handleUpload(event,'${stop.id}')"></label>
+            <input id="url-${stop.id}" type="url" placeholder="Eller klistra in bild-URL..." style="flex:1;padding:0.35rem 0.65rem;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);font-size:0.75rem;font-family:inherit;color:var(--ink)">
+            <button class="btn btn-ghost btn-sm" onclick="addImageUrl('${stop.id}')">Lägg till</button>
+          </div>
         </div>
       `;
     }
     if (stopImages.length > 0) {
-      content += '<div class="img-gallery">';
+      headerContent += '<div class="img-gallery">';
       stopImages.forEach(img => {
-        const caption = img.caption ? `<div class="img-caption">${img.caption}</div>` : '';
         const delBtn = isAdmin ? `<button class="img-delete" onclick="deleteImage('${stop.id}','${img.id}',${!!(img.storage_path)})">✕</button>` : '';
-        content += `
-          <div class="img-gallery-item" onclick="openLightbox('${img.url}')">
+        headerContent += `
+          <div class="img-gallery-item" onclick="openLightbox('${img.url}')" title="${img.caption||''}">
             ${delBtn}
             <img src="${img.url}" alt="${img.caption||''}" onerror="this.parentElement.style.opacity='0.3'">
-            ${caption}
           </div>
         `;
       });
-      content += '</div>';
+      headerContent += '</div>';
     } else if (!isAdmin) {
-      content += '<div class="img-no-imgs">Inga bilder än</div>';
+      headerContent += '<div style="padding: 1rem; text-align: center; color: #ccc; font-size: 0.8rem; grid-column: 1/-1;">Inga bilder än</div>';
     }
-    content += '</div>';
+    headerContent += '</div>';
   }
 
   if (isAdmin) {
-    content += `
+    headerContent += `
       <div class="btn-group">
         <button class="btn btn-ghost btn-sm" onclick="openEditStop(stops.find(s => s.id === '${stop.id}'))">✎ Redigera stopp</button>
         <button class="btn btn-ghost btn-sm" onclick="moveStop('${stop.id}', -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
@@ -1212,8 +1326,8 @@ function createStopCard(stop, idx) {
     `;
   }
 
-  content += '</div>';
-  card.innerHTML = content;
+  headerContent += '</div>';
+  card.innerHTML = headerContent;
   return card;
 }
 
