@@ -262,15 +262,38 @@ header .tagline {
 .sum-cost strong { display:block; font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--secondary); margin-top:0.2rem; }
 
 .drive-row {
-  display:flex; align-items:center; gap:0.5rem;
-  padding:0.6rem 0.9rem; margin:0.3rem 0;
-  background:var(--cream); border-radius:6px;
-  font-size:0.75rem; color:#666;
-  border:1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 1.2rem;
+  margin: 0.6rem 0;
+  background: linear-gradient(135deg, var(--primary-lighter) 0%, rgba(255,107,53,0.05) 100%);
+  border: 1px solid var(--primary-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: #666;
+  border-left: 3px solid var(--primary);
+  width: 100%;
 }
-.drive-row .arrow { color:var(--primary); font-weight: bold; }
-.drive-row.editable { cursor:pointer; }
-.drive-row.editable:hover { background:var(--primary-lighter); border-color:var(--primary); }
+.drive-row .arrow {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.drive-row span:last-child {
+  flex: 1;
+  white-space: normal;
+}
+.drive-row.editable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.drive-row.editable:hover {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 100%);
+  border-color: var(--primary);
+  color: var(--ink);
+}
 
 .stop-card {
   background: white;
@@ -1201,19 +1224,16 @@ function createStopCard(stop, idx) {
       <div class="expand-icon">▼</div>
     </div>
 
+    <!-- Drive info - ALLTID SYNLIG mellan stoppen -->
+    ${stop.drive_from_prev ? `
+      <div class="drive-row ${isAdmin ? 'editable' : ''}" ${isAdmin ? `onclick="openEditStop(stops.find(s => s.id === '${stop.id}'))"` : ''}>
+        <span class="arrow">→</span>
+        <span>${makeLinksClickable(stop.drive_from_prev)}</span>
+      </div>
+    ` : ''}
+
     <div class="stop-content">
-  `;
-
-  // Drive info
-  if (stop.drive_from_prev) {
-    headerContent += `<div class="drive-row ${isAdmin ? 'editable' : ''}" ${isAdmin ? `onclick="openEditStop(stops.find(s => s.id === '${stop.id}'))"` : ''}>
-      <span class="arrow">→</span>
-      <span>${makeLinksClickable(stop.drive_from_prev)}</span>
-    </div>`;
-  }
-
-  // Två-kolumns: Vandring & Boende
-  headerContent += `<div class="content-columns">
+    <div class="content-columns">
     <div class="content-column">
       <div class="section-label">🥾 Vandring</div>
   `;
