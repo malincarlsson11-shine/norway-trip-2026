@@ -7,6 +7,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+
+<!-- LOAD CONFIG FIRST - FÖRE ALL ANNAN JS -->
+<script src="config.js"></script>
+
 <style>
 :root {
   /* Sommarsol & fjord-inspirerad palett */
@@ -874,9 +878,9 @@ header .tagline {
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL      = 'https://biqtstbtmchnystomvvt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpcXRzdGJ0bWNobnlzdG9tdnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1Nzc3OTksImV4cCI6MjA5MTE1Mzc5OX0.Mqf22SPfj2aio_uFwvVLA9dzB-6LEu7ekI_y-JvxukY';
-const GOOGLE_MAPS_KEY   = 'AIzaSyDbx8AWLfg8BdkjgJ-3uRFJr-C4WUmNlpI';
+// ── INITIALIZE WITH CONFIG ──────────────────────────────────
+// config.js har redan loadats via <script src="config.js"></script>
+// Vi hämtar värden från window.APP_CONFIG
 
 let sb = null;
 let isAdmin = false;
@@ -887,10 +891,20 @@ let activeStopId = null;
 let map = null;
 let markers = [];
 let polyline = null;
-let manualRate = null;
 
 async function init() {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Hämta config från window
+  const supabaseUrl = window.APP_CONFIG?.SUPABASE_URL;
+  const supabaseKey = window.APP_CONFIG?.SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ API-nycklar saknas! Se till att config.js är korrekt konfigurerad.');
+    toast('API-nycklar är inte konfigurerade', true);
+    return;
+  }
+  
+  // Initiera Supabase
+  sb = supabase.createClient(supabaseUrl, supabaseKey);
   checkAuth();
   await loadAll();
 }
@@ -1012,14 +1026,12 @@ function selectStop(stopId) {
   activeStopId = stopId;
   renderMap();
   
-  // Öppna och highlighta kortet i höger panel
   const card = document.getElementById('card-' + stopId);
   if (card) {
     card.classList.add('open');
     const stop = stops.find(s => s.id === stopId);
     if (stop) stop._open = true;
     
-    // Scrolla till kortet
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
@@ -1040,11 +1052,11 @@ const makeLinksClickable = (text) => {
   if (!text) return '';
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return text.replace(urlRegex, (url) => {
-    return `<a href="${url}" target="_blank" rel="noopener">${url}<svg class="external-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>`;
+    return `<a href="${url}" target="_blank" rel="noopener">${url}<svg class="external-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor"/></svg></a>`;
   });
 };
 
-// Helper: Bestäm boende-ikon baserat på namn
+// Helper: Bestäm boende-ikon
 const getAccIcon = (name) => {
   if (!name) return '🏠';
   const lower = name.toLowerCase();
@@ -1054,7 +1066,7 @@ const getAccIcon = (name) => {
   return '🏠';
 };
 
-// Helper: Formatera pris baserat på pristyp
+// Helper: Formatera pris
 const formatAccPrice = (acc) => {
   if (!acc.price_amount) return '—';
   
@@ -1447,18 +1459,21 @@ function updateSummary() {
   updateAccommodations();
 }
 
-async function updateAccommodations() {
+function updateAccommodations() {
   const accs = Object.values(accommodations);
   let totalSEK = 0;
+  
+  // Hämta manuell valutakurs eller använd default
+  const manualRateInput = document.getElementById('manualRate').value;
+  const rate = manualRateInput ? parseFloat(manualRateInput) : 0.95;
 
   for (const acc of accs) {
     let priceInSEK = acc.price_amount || 0;
+    
     if (acc.price_currency === 'NOK') {
-      const rate = manualRate || (await getExchangeRate());
-      priceInSEK = (acc.price_amount || 0) / rate;
+      priceInSEK = (acc.price_amount || 0) * rate;
     } else if (acc.price_currency === 'EUR') {
-      const rate = manualRate || (await getExchangeRate());
-      priceInSEK = (acc.price_amount || 0) * (11 / rate);
+      priceInSEK = (acc.price_amount || 0) * 11;
     }
 
     let total = priceInSEK;
@@ -1481,18 +1496,7 @@ async function updateAccommodations() {
   document.getElementById('headerPerPerson').textContent = Math.round(perPerson) + ' SEK';
 }
 
-async function getExchangeRate() {
-  try {
-    const res = await fetch('https://api.frankfurter.app/latest?from=NOK&to=SEK');
-    const data = await res.json();
-    return data.rates.SEK;
-  } catch {
-    return 1.0;
-  }
-}
-
 function resetRate() {
-  manualRate = null;
   document.getElementById('manualRate').value = '';
   updateAccommodations();
 }
@@ -1505,12 +1509,25 @@ function toast(msg, isErr=false) {
   setTimeout(()=>{ t.className='toast'; }, 2800);
 }
 
+// Starta appen
 init();
 </script>
 
-<!-- Load Google Maps last so initMap is defined -->
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDbx8AWLfg8BdkjgJ-3uRFJr-C4WUmNlpI">
+<!-- Load Google Maps with config API key -->
+<script>
+  // Vänta tills config.js är loadad
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.APP_CONFIG?.GOOGLE_MAPS_API_KEY) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${window.APP_CONFIG.GOOGLE_MAPS_API_KEY}&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    } else {
+      console.error('❌ Google Maps API-nyckel saknas i config.js');
+    }
+  });
 </script>
+
 </body>
 </html>
