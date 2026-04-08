@@ -5,33 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Norge 2026 – Reseplanerare</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- LOAD CONFIG FIRST -->
+<script src="config.js"></script>
+
+<!-- DEFINE initMap EARLY - INNAN Google Maps laddas -->
+<script>
+let map = null;
+let markers = [];
+let polyline = null;
+let stops = [];
+let activeStopId = null;
+
+function initMap() {
+  const center = stops.length > 0 ? { lat: stops[0].lat || 60, lng: stops[0].lng || 10 } : { lat: 60, lng: 10 };
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 6,
+    center,
+    mapTypeId: 'terrain'
+  });
+  renderMap();
+}
+
+function renderMap() {
+  if (!map) return;
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  if (polyline) polyline.setMap(null);
+
+  const validStops = stops.filter(s => s.lat && s.lng);
+  if (validStops.length === 0) return;
+
+  validStops.forEach((stop, idx) => {
+    const label = String(idx + 1);
+    const isActive = activeStopId === stop.id;
+    const marker = new google.maps.Marker({
+      position: { lat: stop.lat, lng: stop.lng },
+      map,
+      title: stop.name,
+      label: {
+        text: label,
+        color: isActive ? 'white' : '#1a1a1a',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        fontFamily: 'Playfair Display'
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: isActive ? 15 : 12,
+        fillColor: isActive ? '#004E89' : '#FF6B35',
+        fillOpacity: 1,
+        strokeColor: 'white',
+        strokeWeight: 2
+      }
+    });
+    marker.addListener('click', () => selectStop(stop.id));
+    markers.push(marker);
+  });
+
+  const path = validStops.map(s => ({ lat: s.lat, lng: s.lng }));
+  polyline = new google.maps.Polyline({
+    path,
+    map,
+    strokeColor: '#004E89',
+    strokeOpacity: 0.5,
+    strokeWeight: 2,
+    geodesic: true
+  });
+
+  const bounds = new google.maps.LatLngBounds();
+  validStops.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
+  map.fitBounds(bounds);
+}
+
+function selectStop(stopId) {
+  activeStopId = stopId;
+  renderMap();
+  
+  const card = document.getElementById('card-' + stopId);
+  if (card) {
+    card.classList.add('open');
+    const stop = stops.find(s => s.id === stopId);
+    if (stop) stop._open = true;
+    
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+</script>
+
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
 
-<!-- LOAD CONFIG FIRST - FÖRE ALL ANNAN JS -->
-<script src="config.js"></script>
-
 <style>
 :root {
-  /* Sommarsol & fjord-inspirerad palett */
-  --primary: #FF6B35;        /* Varm orange-röd */
-  --primary-light: #FFB4A2;  /* Ljus persika */
+  --primary: #FF6B35;
+  --primary-light: #FFB4A2;
   --primary-lighter: #FFE5D8;
-  --secondary: #004E89;      /* Djup fjordblå */
-  --secondary-light: #4A90E2; /* Ljusare blå */
+  --secondary: #004E89;
+  --secondary-light: #4A90E2;
   --secondary-lighter: #E8F1FF;
-  --accent: #FFD700;         /* Guldgul */
+  --accent: #FFD700;
   --accent-light: #FFF8DC;
-  --success: #2ECC71;        /* Grön */
+  --success: #2ECC71;
   --success-light: #D5F4E6;
-  --warning: #F39C12;        /* Orange */
+  --warning: #F39C12;
   --warning-light: #FCF0E0;
-  --danger: #E74C3C;         /* Röd */
+  --danger: #E74C3C;
   --danger-light: #FADBD8;
   
   --ink: #1a1a1a;
-  --paper: #FFFAF5;          /* Varm vit */
-  --cream: #FFF0E6;          /* Ljus persika cream */
+  --paper: #FFFAF5;
+  --cream: #FFF0E6;
   --border: rgba(26,26,26,0.08);
   --border-mid: rgba(26,26,26,0.15);
   --shadow: 0 2px 16px rgba(26,26,26,0.06);
@@ -52,7 +136,6 @@ body {
   line-height: 1.5;
 }
 
-/* ── ADMIN BAR ── */
 .admin-bar {
   display: none;
   background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
@@ -66,7 +149,6 @@ body {
 }
 .admin-bar.visible { display: flex; }
 
-/* ── HEADER ── */
 header {
   background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-light) 100%);
   color: white;
@@ -118,7 +200,6 @@ header .tagline {
 }
 .header-actions { position:absolute; top:1rem; right:1rem; display:flex; gap:0.5rem; z-index:10; }
 
-/* ── TWO-COLUMN LAYOUT ── */
 .layout {
   display: flex;
   height: calc(100vh - 160px);
@@ -126,7 +207,6 @@ header .tagline {
   overflow: hidden;
 }
 
-/* ── LEFT: MAP PANEL ── */
 .map-panel {
   width: var(--map-width);
   flex-shrink: 0;
@@ -143,14 +223,12 @@ header .tagline {
   width: 100%;
 }
 
-/* ── RIGHT: STOPS PANEL ── */
 .stops-panel {
   flex: 1;
   overflow-y: auto;
   padding: 1.2rem 1.2rem 4rem;
 }
 
-/* ── RATE BAR ── */
 .rate-bar {
   background: var(--accent-light);
   border: 1px solid rgba(255, 215, 0, 0.3);
@@ -167,7 +245,6 @@ header .tagline {
   color: var(--warning); background: white; text-align: center;
 }
 
-/* ── SUMMARY BAR ── */
 .summary-bar {
   background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--accent-light) 100%);
   border: 1px solid var(--primary-light);
@@ -184,7 +261,6 @@ header .tagline {
 .sum-cost { flex:1; text-align:right; font-size:0.75rem; color:#666; }
 .sum-cost strong { display:block; font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--secondary); margin-top:0.2rem; }
 
-/* ── DRIVE ROW ── */
 .drive-row {
   display:flex; align-items:center; gap:0.5rem;
   padding:0.6rem 0.9rem; margin:0.3rem 0;
@@ -196,7 +272,6 @@ header .tagline {
 .drive-row.editable { cursor:pointer; }
 .drive-row.editable:hover { background:var(--primary-lighter); border-color:var(--primary); }
 
-/* ── STOP CARD ── */
 .stop-card {
   background: white;
   border: 1px solid var(--border);
@@ -214,7 +289,6 @@ header .tagline {
   box-shadow: 0 0 0 2px var(--secondary-lighter), var(--shadow-lg);
 }
 
-/* ── STOP HEADER (clickable) ── */
 .stop-header {
   padding: 0.9rem 1rem;
   display: flex;
@@ -254,7 +328,6 @@ header .tagline {
   transform: rotate(180deg);
 }
 
-/* ── STOP CONTENT (hidden by default) ── */
 .stop-content {
   max-height: 0;
   overflow: hidden;
@@ -266,7 +339,6 @@ header .tagline {
   opacity: 1;
 }
 
-/* ── TWO-COLUMN CONTENT ── */
 .content-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -280,7 +352,6 @@ header .tagline {
   border-right: 1px solid var(--border);
 }
 
-/* ── SECTION LABEL ── */
 .section-label {
   font-size: 0.65rem;
   text-transform: uppercase;
@@ -292,7 +363,6 @@ header .tagline {
   border-bottom: 1px solid var(--border);
 }
 
-/* ── INFO CELL ── */
 .info-cell {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
@@ -316,7 +386,6 @@ header .tagline {
   word-break: break-word;
 }
 
-/* ── CLICKABLE LINKS ── */
 .info-cell .value a {
   color: var(--secondary);
   text-decoration: none;
@@ -339,7 +408,6 @@ header .tagline {
   fill: currentColor;
 }
 
-/* ── ACCOMMODATION BOX ── */
 .acc-box {
   background: var(--secondary-lighter);
   border: 1px solid var(--secondary-light);
@@ -399,7 +467,6 @@ header .tagline {
   border-bottom-color: var(--primary);
 }
 
-/* ── IMAGES SECTION ── */
 .img-section {
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--border);
@@ -483,7 +550,6 @@ header .tagline {
   padding: 1rem 0;
 }
 
-/* ── BUTTONS ── */
 .btn {
   display: inline-block;
   padding: 0.55rem 1rem;
@@ -531,7 +597,6 @@ header .tagline {
   background: var(--paper);
 }
 
-/* ── MODALS ── */
 .modal {
   display: none;
   position: fixed;
@@ -609,7 +674,6 @@ header .tagline {
   margin-top: 1.5rem;
 }
 
-/* ── LIGHTBOX ── */
 .lightbox {
   display: none;
   position: fixed;
@@ -643,7 +707,6 @@ header .tagline {
   cursor: pointer;
 }
 
-/* ── TOAST ── */
 .toast {
   position: fixed;
   bottom: -100px;
@@ -664,13 +727,11 @@ header .tagline {
 </head>
 <body>
 
-<!-- ADMIN BAR -->
 <div class="admin-bar" id="adminBar">
   <span id="userEmail"></span>
   <button onclick="logout()" class="btn btn-sm">Logga ut</button>
 </div>
 
-<!-- HEADER -->
 <header>
   <div class="header-actions">
     <button class="btn btn-sm" onclick="toggleAuth()" id="authBtn">Logga in</button>
@@ -703,23 +764,18 @@ header .tagline {
   </div>
 </header>
 
-<!-- MAIN LAYOUT -->
 <div class="layout">
-  <!-- LEFT: MAP -->
   <div class="map-panel">
     <div id="map"></div>
   </div>
 
-  <!-- RIGHT: STOPS LIST -->
   <div class="stops-panel">
-    <!-- RATE BAR -->
     <div class="rate-bar" id="rateBar" style="display:none">
       <label>Valutakurs NOK/SEK:</label>
       <input type="number" id="manualRate" step="0.01" onchange="updateAccommodations()">
       <button class="btn btn-sm btn-ghost" onclick="resetRate()">Återställ</button>
     </div>
 
-    <!-- SUMMARY -->
     <div class="summary-bar" id="summaryBar" style="display:none">
       <div class="sum-item">
         <div class="n" id="sumNights">—</div>
@@ -742,12 +798,10 @@ header .tagline {
       </div>
     </div>
 
-    <!-- STOPS -->
     <div id="stopsContainer"></div>
   </div>
 </div>
 
-<!-- STOP MODAL -->
 <div class="modal" id="stopModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -806,7 +860,6 @@ header .tagline {
   </div>
 </div>
 
-<!-- ACCOMMODATION MODAL -->
 <div class="modal" id="accModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -866,7 +919,6 @@ header .tagline {
   </div>
 </div>
 
-<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
   <div class="lightbox-content">
     <button class="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -874,26 +926,15 @@ header .tagline {
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ── INITIALIZE WITH CONFIG ──────────────────────────────────
-// config.js har redan loadats via <script src="config.js"></script>
-// Vi hämtar värden från window.APP_CONFIG
-
 let sb = null;
 let isAdmin = false;
-let stops = [];
 let accommodations = {};
 let images = {};
-let activeStopId = null;
-let map = null;
-let markers = [];
-let polyline = null;
 
 async function init() {
-  // Hämta config från window
   const supabaseUrl = window.APP_CONFIG?.SUPABASE_URL;
   const supabaseKey = window.APP_CONFIG?.SUPABASE_ANON_KEY;
   
@@ -903,7 +944,6 @@ async function init() {
     return;
   }
   
-  // Initiera Supabase
   sb = supabase.createClient(supabaseUrl, supabaseKey);
   checkAuth();
   await loadAll();
@@ -957,86 +997,6 @@ async function loadAll() {
   updateSummary();
 }
 
-// ── MAP ──────────────────────────────────────────────────────
-function initMap() {
-  const center = stops.length > 0 ? { lat: stops[0].lat || 60, lng: stops[0].lng || 10 } : { lat: 60, lng: 10 };
-  map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 6,
-    center,
-    mapTypeId: 'terrain'
-  });
-  renderMap();
-}
-
-function renderMap() {
-  if (!map) return;
-  markers.forEach(m => m.setMap(null));
-  markers = [];
-  if (polyline) polyline.setMap(null);
-
-  const validStops = stops.filter(s => s.lat && s.lng);
-  if (validStops.length === 0) return;
-
-  // Markers
-  validStops.forEach((stop, idx) => {
-    const label = String(idx + 1);
-    const isActive = activeStopId === stop.id;
-    const marker = new google.maps.Marker({
-      position: { lat: stop.lat, lng: stop.lng },
-      map,
-      title: stop.name,
-      label: {
-        text: label,
-        color: isActive ? 'white' : '#1a1a1a',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        fontFamily: 'Playfair Display'
-      },
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: isActive ? 15 : 12,
-        fillColor: isActive ? '#004E89' : '#FF6B35',
-        fillOpacity: 1,
-        strokeColor: 'white',
-        strokeWeight: 2
-      }
-    });
-    marker.addListener('click', () => selectStop(stop.id));
-    markers.push(marker);
-  });
-
-  // Polyline
-  const path = validStops.map(s => ({ lat: s.lat, lng: s.lng }));
-  polyline = new google.maps.Polyline({
-    path,
-    map,
-    strokeColor: '#004E89',
-    strokeOpacity: 0.5,
-    strokeWeight: 2,
-    geodesic: true
-  });
-
-  // Bounds
-  const bounds = new google.maps.LatLngBounds();
-  validStops.forEach(s => bounds.extend({ lat: s.lat, lng: s.lng }));
-  map.fitBounds(bounds);
-}
-
-function selectStop(stopId) {
-  activeStopId = stopId;
-  renderMap();
-  
-  const card = document.getElementById('card-' + stopId);
-  if (card) {
-    card.classList.add('open');
-    const stop = stops.find(s => s.id === stopId);
-    if (stop) stop._open = true;
-    
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-// ── STOP RENDERING ──────────────────────────────────────────
 function renderStops() {
   const container = document.getElementById('stopsContainer');
   container.innerHTML = '';
@@ -1047,7 +1007,6 @@ function renderStops() {
   });
 }
 
-// Helper: Konvertera URLs till klickbara länkar
 const makeLinksClickable = (text) => {
   if (!text) return '';
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -1056,7 +1015,6 @@ const makeLinksClickable = (text) => {
   });
 };
 
-// Helper: Bestäm boende-ikon
 const getAccIcon = (name) => {
   if (!name) return '🏠';
   const lower = name.toLowerCase();
@@ -1066,7 +1024,6 @@ const getAccIcon = (name) => {
   return '🏠';
 };
 
-// Helper: Formatera pris
 const formatAccPrice = (acc) => {
   if (!acc.price_amount) return '—';
   
@@ -1086,6 +1043,10 @@ const formatAccPrice = (acc) => {
   
   return display;
 };
+
+function getExternalLinkSvg() {
+  return `<svg class="external-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor"/></svg>`;
+}
 
 function createStopCard(stop, idx) {
   const card = document.createElement('div');
@@ -1111,7 +1072,6 @@ function createStopCard(stop, idx) {
     <div class="stop-content">
   `;
 
-  // Drive info
   if (stop.drive_from_prev) {
     content += `<div class="drive-row ${isAdmin ? 'editable' : ''}" ${isAdmin ? `onclick="openEditStop(stops.find(s => s.id === '${stop.id}'))"` : ''}>
       <span class="arrow">→</span>
@@ -1119,13 +1079,11 @@ function createStopCard(stop, idx) {
     </div>`;
   }
 
-  // Två-kolumns layout
   content += `<div class="content-columns">
     <div class="content-column">
       <div class="section-label">🥾 Vandring</div>
   `;
 
-  // Vandring - vänster kolumn
   if (stop.hiking_name) {
     content += `
       <div class="info-cell">
@@ -1143,7 +1101,6 @@ function createStopCard(stop, idx) {
     `;
   }
 
-  // Mat - vänster kolumn
   if (stop.food_store || stop.food_note || isAdmin) {
     content += `<div class="section-label">🛒 Mat & dryck</div>`;
     if (stop.food_store) {
@@ -1170,7 +1127,6 @@ function createStopCard(stop, idx) {
       <div class="section-label">🏠 Boende</div>
   `;
 
-  // Boende - höger kolumn
   const acc = accommodations[stop.id];
   if (acc) {
     const icon = getAccIcon(acc.name);
@@ -1210,7 +1166,6 @@ function createStopCard(stop, idx) {
   </div>
   `;
 
-  // Images
   const stopImages = images[stop.id] || [];
   if (stopImages.length > 0 || isAdmin) {
     content += `
@@ -1246,7 +1201,6 @@ function createStopCard(stop, idx) {
     content += '</div>';
   }
 
-  // Admin buttons
   if (isAdmin) {
     content += `
       <div class="btn-group">
@@ -1261,10 +1215,6 @@ function createStopCard(stop, idx) {
   content += '</div>';
   card.innerHTML = content;
   return card;
-}
-
-function getExternalLinkSvg() {
-  return `<svg class="external-link-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83l1.41 1.41L19 6.41V10h2V3h-7z" fill="currentColor"/></svg>`;
 }
 
 function handleCardClick(stopId) {
@@ -1284,7 +1234,6 @@ function handleCardClick(stopId) {
   }
 }
 
-// ── STOP CRUD ───────────────────────────────────────────
 function openAddStop() {
   document.getElementById('modalTitle').textContent = 'Lägg till stopp';
   document.getElementById('editStopId').value = '';
@@ -1292,6 +1241,7 @@ function openAddStop() {
   document.getElementById('f-diff').value = 'easy';
   document.getElementById('stopModal').classList.add('open');
 }
+
 function openEditStop(stop) {
   document.getElementById('modalTitle').textContent = 'Redigera stopp';
   document.getElementById('editStopId').value = stop.id;
@@ -1307,6 +1257,7 @@ function openEditStop(stop) {
   document.getElementById('f-lng').value = stop.lng||'';
   document.getElementById('stopModal').classList.add('open');
 }
+
 function closeStopModal() { document.getElementById('stopModal').classList.remove('open'); }
 
 async function saveStop() {
@@ -1337,12 +1288,14 @@ async function saveStop() {
   closeStopModal();
   await loadAll();
 }
+
 async function deleteStop(id) {
   if (!confirm('Ta bort detta stopp?')) return;
   await sb.from('stops').delete().eq('id', id);
   toast('Stopp borttaget');
   await loadAll();
 }
+
 async function moveStop(id, dir) {
   const idx = stops.findIndex(s=>s.id===id);
   const other = stops[idx+dir];
@@ -1355,7 +1308,6 @@ async function moveStop(id, dir) {
   await loadAll();
 }
 
-// ── ACCOMMODATION CRUD ──────────────────────────────────
 function openAccModal(stopId) {
   const acc = accommodations[stopId];
   document.getElementById('accStopId').value = stopId;
@@ -1372,7 +1324,9 @@ function openAccModal(stopId) {
   document.getElementById('acc-notes').value   = acc?.notes||'';
   document.getElementById('accModal').classList.add('open');
 }
+
 function closeAccModal() { document.getElementById('accModal').classList.remove('open'); }
+
 async function saveAccommodation() {
   const stopId = document.getElementById('accStopId').value;
   const accId  = document.getElementById('accId').value;
@@ -1395,7 +1349,6 @@ async function saveAccommodation() {
   await loadAll();
 }
 
-// ── IMAGE CRUD ──────────────────────────────────────────
 async function handleUpload(event, stopId) {
   const files = Array.from(event.target.files);
   for (const file of files) {
@@ -1410,6 +1363,7 @@ async function handleUpload(event, stopId) {
   await loadAll();
   event.target.value = '';
 }
+
 async function addImageUrl(stopId) {
   const input = document.getElementById('url-'+stopId);
   const url = input.value.trim();
@@ -1419,6 +1373,7 @@ async function addImageUrl(stopId) {
   toast('Bild tillagd ✓');
   await loadAll();
 }
+
 async function deleteImage(stopId, imgId, hasStorage) {
   const img = (images[stopId]||[]).find(i=>i.id===imgId);
   if (img?.storage_path) await sb.storage.from('trip-images').remove([img.storage_path]);
@@ -1427,14 +1382,13 @@ async function deleteImage(stopId, imgId, hasStorage) {
   await loadAll();
 }
 
-// ── LIGHTBOX ────────────────────────────────────────────
 function openLightbox(url) {
   document.getElementById('lightboxImg').src = url;
   document.getElementById('lightbox').classList.add('open');
 }
+
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 
-// ── SUMMARY ─────────────────────────────────────────────
 function updateSummary() {
   document.getElementById('statDays').textContent = stops.length;
   document.getElementById('statStops').textContent = stops.length;
@@ -1463,7 +1417,6 @@ function updateAccommodations() {
   const accs = Object.values(accommodations);
   let totalSEK = 0;
   
-  // Hämta manuell valutakurs eller använd default
   const manualRateInput = document.getElementById('manualRate').value;
   const rate = manualRateInput ? parseFloat(manualRateInput) : 0.95;
 
@@ -1501,7 +1454,6 @@ function resetRate() {
   updateAccommodations();
 }
 
-// ── TOAST ────────────────────────────────────────────────
 function toast(msg, isErr=false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -1513,9 +1465,8 @@ function toast(msg, isErr=false) {
 init();
 </script>
 
-<!-- Load Google Maps with config API key -->
+<!-- Load Google Maps LAST, after everything is defined -->
 <script>
-  // Vänta tills config.js är helt loadad
   window.addEventListener('load', () => {
     if (window.APP_CONFIG?.GOOGLE_MAPS_API_KEY) {
       const script = document.createElement('script');
