@@ -1515,8 +1515,8 @@ init();
 
 <!-- Load Google Maps with config API key -->
 <script>
-  // Vänta tills config.js är loadad
-  document.addEventListener('DOMContentLoaded', () => {
+  // Vänta tills config.js är helt loadad
+  window.addEventListener('load', () => {
     if (window.APP_CONFIG?.GOOGLE_MAPS_API_KEY) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${window.APP_CONFIG.GOOGLE_MAPS_API_KEY}&callback=initMap`;
