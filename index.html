@@ -1033,6 +1033,7 @@ header .tagline {
 
 <script>
 let sb = null;
+let sbRead = null;
 let isAdmin = false;
 let accommodations = {};
 let images = {};
@@ -1040,14 +1041,17 @@ let images = {};
 async function init() {
   const supabaseUrl = window.APP_CONFIG?.SUPABASE_URL;
   const supabaseKey = window.APP_CONFIG?.SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
     console.error('❌ API-nycklar saknas! Se till att config.js är korrekt konfigurerad.');
     toast('API-nycklar är inte konfigurerade', true);
     return;
   }
-  
+
   sb = supabase.createClient(supabaseUrl, supabaseKey);
+  // Separate client with no session attached, so viewing the trip never
+  // breaks if an admin's own login session goes stale.
+  sbRead = supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } });
   checkAuth();
   await loadAll();
 }
@@ -1103,9 +1107,9 @@ async function logout() {
 
 async function loadAll() {
   const [stopsRes, accsRes, imgsRes] = await Promise.all([
-    sb.from('stops').select().order('order_index'),
-    sb.from('accommodations').select(),
-    sb.from('images').select().order('stop_id, order_index')
+    sbRead.from('stops').select().order('order_index'),
+    sbRead.from('accommodations').select(),
+    sbRead.from('images').select().order('stop_id, order_index')
   ]);
 
   stops = stopsRes.data || [];
